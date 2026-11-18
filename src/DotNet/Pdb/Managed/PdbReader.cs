@@ -124,11 +124,11 @@ namespace dnlib.DotNet.Pdb.Managed {
 			documentStreams = new HashSet<uint>();
 			foreach (var module in modules) {
 				if (IsValidStreamIndex(module.StreamId))
-					module.LoadFunctions(this, ref GetStreamContent(module.StreamId));
+					module.LoadFunctions(this, ref streams[module.StreamId]!.Content);
 			}
 
-			if (tokenMapStream is ushort tokenMapStreamIndex && IsValidStreamIndex(tokenMapStreamIndex))
-				ApplyRidMap(ref GetStreamContent(tokenMapStreamIndex));
+			if (IsValidStreamIndex(tokenMapStream ?? STREAM_INVALID_INDEX))
+				ApplyRidMap(ref streams[tokenMapStream!.Value]!.Content);
 
 			functions = new Dictionary<int, DbiFunction>();
 			foreach (var module in modules) {
@@ -147,18 +147,10 @@ namespace dnlib.DotNet.Pdb.Managed {
 				return null;
 			if (streamId > ushort.MaxValue || !IsValidStreamIndex((ushort)streamId))
 				return null;
-			return GetStreamContent(streamId).ToArray();
+			return streams[streamId]!.Content.ToArray();
 		}
 
-		// Used for optional streams: an invalid index and a deleted stream (size 0xFFFFFFFF) both mean that there's no stream
-		bool IsValidStreamIndex(ushort index) => index != STREAM_INVALID_INDEX && index < streams.Length && streams[index] is not null;
-
-		// Used for required streams and for streams that have been checked by IsValidStreamIndex()
-		ref DataReader GetStreamContent(uint index) {
-			if (index >= (uint)streams.Length || streams[index] is not MsfStream stream)
-				throw new PdbException($"Stream {index} doesn't exist");
-			return ref stream.Content;
-		}
+		bool IsValidStreamIndex(ushort index) => index != STREAM_INVALID_INDEX && index < streams.Length;
 
 		void ReadRootDirectory(MsfStream stream, DataReader[] pages, uint pageSize) {
 			uint streamNum = stream.Content.ReadUInt32();
@@ -190,7 +182,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 		}
 
 		void ReadNames() {
-			ref var stream = ref GetStreamContent(STREAM_NAMES);
+			ref var stream = ref streams[STREAM_NAMES]!.Content;
 			stream.Position = 8;
 			Age = stream.ReadUInt32();
 			Guid = stream.ReadGuid();
@@ -231,7 +223,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 			if (!names.TryGetValue("/names", out uint streamId))
 				throw new PdbException("String table not found");
 
-			ref var stream = ref GetStreamContent(streamId);
+			ref var stream = ref streams[streamId]!.Content;
 			stream.Position = 8;
 
 			uint strSize = stream.ReadUInt32();
@@ -269,7 +261,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 		}
 
 		ushort? ReadModules() {
-			ref var stream = ref GetStreamContent(STREAM_DBI);
+			ref var stream = ref streams[STREAM_DBI]!.Content;
 			modules = new List<DbiModule>();
 			if (stream.Length == 0)
 				return null;
@@ -295,7 +287,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 			}
 
 			if (IsValidStreamIndex(symrecStream))
-				ReadGlobalSymbols(ref GetStreamContent(symrecStream));
+				ReadGlobalSymbols(ref streams[symrecStream]!.Content);
 
 			if (dbghdrSize != 0) {
 				stream.Position += gpmodiSize;
@@ -318,7 +310,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 					// own copy of the embedded source code and all of them could use the same big stream.
 					if (!documentStreams.Add(streamId))
 						throw new PdbException("Documents share a stream");
-					doc.Read(ref GetStreamContent(streamId));
+					doc.Read(ref streams[streamId]!.Content);
 				}
 				documents.Add(name, doc);
 			}

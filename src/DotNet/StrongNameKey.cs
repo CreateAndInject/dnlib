@@ -146,10 +146,8 @@ namespace dnlib.DotNet {
 		/// Constructor
 		/// </summary>
 		/// <param name="pk">Public key</param>
-		/// <exception cref="ArgumentNullException"><paramref name="pk"/> has no data</exception>
-		/// <exception cref="InvalidKeyException">Strong name key is invalid</exception>
 		public StrongNamePublicKey(PublicKey pk)
-			: this(pk.Data ?? throw new ArgumentNullException(nameof(pk), "The public key has no data")) {
+			: this(pk.Data!) {
 		}
 
 		/// <summary>
@@ -522,7 +520,7 @@ namespace dnlib.DotNet {
 			var hash = AssemblyHash.Hash(signaturePubKey.CreatePublicKey(), identityPubKey.HashAlgorithm);
 			using (var rsa = identityKey.CreateRSA()) {
 				var rsaFmt = new RSAPKCS1SignatureFormatter(rsa);
-				string hashName = identityPubKey.HashAlgorithm.GetName() ?? "SHA1";
+				string hashName = identityPubKey.HashAlgorithm.GetName()!;
 				rsaFmt.SetHashAlgorithm(hashName);
 				var snSig = rsaFmt.CreateSignature(hash);
 				Array.Reverse(snSig);

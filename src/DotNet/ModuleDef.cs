@@ -1307,11 +1307,13 @@ namespace dnlib.DotNet {
 			if (sig is null)
 				return null;
 
-			if (sig.TypeDef is TypeDef sigTypeDef)
-				return sigTypeDef.Module == this ? sigTypeDef : null;
+			td = sig.TypeDef!;
+			if (td is not null)
+				return td.Module == this ? td : null;
 
-			if (sig.TypeRef is TypeRef sigTypeRef)
-				return Find(sigTypeRef);
+			tr = sig.TypeRef!;
+			if (tr is not null)
+				return Find(tr);
 
 			return null;
 		}

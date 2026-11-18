@@ -754,9 +754,7 @@ namespace dnlib.DotNet.Emit {
 				TypeSig declSig;
 				bool isValueType;
 				if (declaringType is TypeSpec spec) {
-					if (spec.TypeSig is not TypeSig specSig)
-						return null;
-					declSig = specSig;
+					declSig = spec.TypeSig!;
 					isValueType = declSig.IsValueType;
 				}
 				else {

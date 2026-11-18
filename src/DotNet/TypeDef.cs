@@ -2384,8 +2384,9 @@ namespace dnlib.DotNet {
 
 			// If Class is MethodDef, then it should be a vararg method
 			var parent = mr.Class;
-			if (parent is MethodDef parentMethod)
-				return parentMethod;
+			md = (parent as MethodDef)!;
+			if (md is not null)
+				return md;
 
 			// If it's a TypeSpec, it must be a generic instance type
 			for (int i = 0; i < 10; i++) {

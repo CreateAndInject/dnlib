@@ -443,8 +443,9 @@ namespace dnlib.DotNet {
 			if (mr.Class is TypeDef td)
 				return td;
 
-			if (TryResolve(mr.Class as TypeRef) is TypeDef resolvedTypeDef)
-				return resolvedTypeDef;
+			td = (TryResolve(mr.Class as TypeRef) as TypeDef)!;
+			if (td is not null)
+				return td;
 
 			var modRef = mr.Class as ModuleRef;
 			if (IsThisModule(modRef))
@@ -908,9 +909,7 @@ namespace dnlib.DotNet {
 		/// <param name="type">The type</param>
 		/// <returns>The imported type or <c>null</c></returns>
 		public ITypeDefOrRef? ImportOrNull(TypeRef? type) {
-			if (type is null)
-				return null;
-			var mapped = mapper?.Map(type);
+			var mapped = mapper?.Map(type!);
 			if (mapped is not null)
 				return mapped;
 
